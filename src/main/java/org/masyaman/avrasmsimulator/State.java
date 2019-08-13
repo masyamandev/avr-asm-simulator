@@ -14,23 +14,23 @@ public class State {
 
 
     public void setRegister(String register, int value) {
-        registers.put(register, (byte) value);
+        registers.put(register.toLowerCase(), (byte) value);
     }
 
     public int getRegister(String register) {
-        return registers.computeIfAbsent(register, this::defaultRegister) & 0xFF;
+        return registers.computeIfAbsent(register.toLowerCase(), this::defaultRegister) & 0xFF;
     }
 
     public int getRegister(String register, int defaultValue) {
-        return registers.getOrDefault(register, (byte) defaultValue) & 0xFF;
+        return registers.getOrDefault(register.toLowerCase(), (byte) defaultValue) & 0xFF;
     }
 
     public void setRegisterBit(String register, int bitNumber, boolean bitValue) {
         getRegister(register);
         if (bitValue) {
-            registers.compute(register, (reg, value) -> (byte) (value | (1 << bitNumber)));
+            registers.compute(register.toLowerCase(), (reg, value) -> (byte) (value | (1 << bitNumber)));
         } else {
-            registers.compute(register, (reg, value) -> (byte) (value & ~(1 << bitNumber)));
+            registers.compute(register.toLowerCase(), (reg, value) -> (byte) (value & ~(1 << bitNumber)));
         }
     }
 

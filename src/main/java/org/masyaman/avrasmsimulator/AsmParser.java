@@ -9,12 +9,20 @@ public class AsmParser {
 
     public static Map<String, Class<? extends Command>> COMMANDS = new HashMap<String, Class<? extends Command>>() {{
         put("add", Add.class);
+        put("sub", Sub.class);
+        put("sbci", Sbci.class);
+        put("com", Com.class);
+        put("neg", Neg.class);
         put("dec", Dec.class);
+        put("tst", Tst.class);
         put("clr", Clr.class);
 
+        put("sbrc", Sbrc.class);
         put("brne", Brne.class);
         put("brcc", Brcc.class);
+        put("brlt", Brlt.class);
 
+        put("mov", Mov.class);
         put("ldi", Ldi.class);
 
         put("lsr", Lsr.class);

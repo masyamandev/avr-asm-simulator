@@ -70,58 +70,59 @@ class MultiplicationTest {
     public void testUnsignedMultiplicationSpeedOptimized(int uMultiplicand, IntStream uMultipliers) {
         AsmParser asmParser = new AsmParser();
         Program program = asmParser.parse( "" +
-                "clr %B[result]" +
-                "mov %A[result], %[muls]" +
-                "sbrc %A[result], 7" +
-                "neg %A[result]" +
+                "clr %B[result]" + "\n" +
+                "mov %A[result], %[muls]" + "\n" +
+//                "sbrc %A[result], 7" + "\n" +
+//                "neg %A[result]" + "\n" +
 
-                "lsr %A[result]" +
+                "lsr %A[result]" + "\n" +
 
-                "brcc .+2" +
-                "add %B[result], %[mulu]" +
-                "ror %B[result]" +
-                "ror %A[result]" +
+                "brcc .+2" + "\n" +
+                "add %B[result], %[mulu]" + "\n" +
+                "ror %B[result]" + "\n" +
+                "ror %A[result]" + "\n" +
 
-                "brcc .+2" +
-                "add %B[result], %[mulu]" +
-                "ror %B[result]" +
-                "ror %A[result]" +
+                "brcc .+2" + "\n" +
+                "add %B[result], %[mulu]" + "\n" +
+                "ror %B[result]" + "\n" +
+                "ror %A[result]" + "\n" +
 
-                "brcc .+2" +
-                "add %B[result], %[mulu]" +
-                "ror %B[result]" +
-                "ror %A[result]" +
+                "brcc .+2" + "\n" +
+                "add %B[result], %[mulu]" + "\n" +
+                "ror %B[result]" + "\n" +
+                "ror %A[result]" + "\n" +
 
-                "brcc .+2" +
-                "add %B[result], %[mulu]" +
-                "ror %B[result]" +
-                "ror %A[result]" +
+                "brcc .+2" + "\n" +
+                "add %B[result], %[mulu]" + "\n" +
+                "ror %B[result]" + "\n" +
+                "ror %A[result]" + "\n" +
 
-                "brcc .+2" +
-                "add %B[result], %[mulu]" +
-                "ror %B[result]" +
-                "ror %A[result]" +
+                "brcc .+2" + "\n" +
+                "add %B[result], %[mulu]" + "\n" +
+                "ror %B[result]" + "\n" +
+                "ror %A[result]" + "\n" +
 
-                "brcc .+2" +
-                "add %B[result], %[mulu]" +
-                "ror %B[result]" +
-                "ror %A[result]" +
+                "brcc .+2" + "\n" +
+                "add %B[result], %[mulu]" + "\n" +
+                "ror %B[result]" + "\n" +
+                "ror %A[result]" + "\n" +
 
-                "brcc .+2" +
-                "add %B[result], %[mulu]" +
-                "ror %B[result]" +
-                "ror %A[result]" +
+                "brcc .+2" + "\n" +
+                "add %B[result], %[mulu]" + "\n" +
+                "ror %B[result]" + "\n" +
+                "ror %A[result]" + "\n" +
 
                 // Bit7 is 0. This optimized block will cause issue on muls = -128. To avoid this use block similar to above.
-                "lsr %B[result]" +
-                "ror %A[result]" +
+                "lsr %B[result]" + "\n" +
+                "ror %A[result]" + "\n" +
 
                 // Invert result sign
-                "tst %[muls]" +
-                "brlt .+6" +
-                "com %B[result]" +
-                "neg %A[result]" +
-                "sbci %B[result], 255"
+//                "tst %[muls]" + "\n" +
+//                "brlt .+6" + "\n" +
+//                "com %B[result]" + "\n" +
+//                "neg %A[result]" + "\n" +
+//                "sbci %B[result], 255" + "\n" +
+                ""
         );
 
         AtomicInteger steps = new AtomicInteger();
@@ -131,13 +132,15 @@ class MultiplicationTest {
             count.incrementAndGet();
 
             State state = new State();
-            state.setRegister("r16", uMultiplicand);
-            state.setRegister("r17", uMultiplier);
+            state.setRegister("%[mulu]", uMultiplicand);
+            state.setRegister("%[muls]", uMultiplier);
 
             steps.addAndGet(program.execute(state));
 
-            assertEquals((uMultiplicand * uMultiplier) & 0xFF, state.getRegister("r17"));
-            assertEquals((uMultiplicand * uMultiplier >> 8) & 0xFF, state.getRegister("r18"));
+            String description = "" + uMultiplicand + "x" + uMultiplier;
+
+            assertEquals((uMultiplicand * uMultiplier) & 0xFF, state.getRegister("%A[result]"), description);
+            assertEquals((uMultiplicand * uMultiplier >> 8) & 0xFF, state.getRegister("%B[result]"), description);
 
         });
 

@@ -39,7 +39,22 @@ public class Program {
     public int getPointer(String toPointer, int currentPointer) {
         if (labels.containsKey(toPointer)) {
             return labels.get(toPointer);
+        } if (toPointer.startsWith(".")) {
+            int moveTo = Integer.parseInt(toPointer.substring(1));
+            while (moveTo > 0) {
+                moveTo -= getCommand(currentPointer).byteLength();
+                currentPointer++;
+            }
+            while (moveTo < 0) {
+                moveTo += getCommand(currentPointer).byteLength();
+                currentPointer--;
+            }
+            return currentPointer;
         }
         throw new NotImplementedException();
+    }
+
+    public Command getCommand(int pointer) {
+        return commands.get(pointer);
     }
 }

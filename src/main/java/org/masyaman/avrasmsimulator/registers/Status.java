@@ -1,7 +1,7 @@
 package org.masyaman.avrasmsimulator.registers;
 
 public class Status {
-    public static final String STATUS = "STATUS";
+    public static final String STATUS = "SREG";
     public static final int STATUS_I = 7;
     public static final int STATUS_T = 6;
     public static final int STATUS_H = 5;
