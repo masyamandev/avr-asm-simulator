@@ -1,26 +1,13 @@
 package org.masyaman.avrasmsimulator;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
-
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class MultiplicationTest {
 
-    private static Stream<Arguments> provideTwoValues() {
-        return IntStream.range(0, 256)
-                .mapToObj(a -> Arguments.of(a, IntStream.range(0, 256)));
-    }
-
-    @MethodSource("provideTwoValues")
-    @ParameterizedTest
-    public void testUnsignedMultiplicationSizeOptimized(int uMultiplicand, IntStream uMultipliers) {
+    @Test
+    public void testUnsignedMultiplicationSizeOptimized() {
         AsmParser asmParser = new AsmParser();
         Program program = asmParser.parse( "" +
                     ".def  mc8u  =r16    ;multiplicand\n" +
@@ -44,36 +31,115 @@ class MultiplicationTest {
                     "brne  m8u_1    ;if not done, loop more"
         );
 
-        AtomicInteger steps = new AtomicInteger();
-        AtomicInteger count = new AtomicInteger();
+        int steps = 0;
+        int count = 0;
 
-        uMultipliers.forEach(uMultiplier -> {
-            count.incrementAndGet();
+        for (int i = 0; i <= 255; i++) {
+            for (int j = 0; j <= 255; j++) {
 
-            State state = new State();
-            state.setRegister("r16", uMultiplicand);
-            state.setRegister("r17", uMultiplier);
+                count++;
 
-            steps.addAndGet(program.execute(state));
+                State state = new State();
+                state.setRegister("r16", i);
+                state.setRegister("r17", j);
 
-            assertEquals((uMultiplicand * uMultiplier) & 0xFF, state.getRegister("r17"));
-            assertEquals((uMultiplicand * uMultiplier >> 8) & 0xFF, state.getRegister("r18"));
+                steps += program.execute(state);
 
-        });
 
-        System.out.println("Average steps = " + (steps.doubleValue() / count.doubleValue()));
+                String description = "" + i + "x" + j;
+
+                assertEquals((i * j) & 0xFF, state.getRegister("r17"), description);
+                assertEquals((i * j >> 8) & 0xFF, state.getRegister("r18"), description);
+            }
+        }
+
+        System.out.println("Average steps = " + (1.0 * steps / count));
     }
 
 
-    @MethodSource("provideTwoValues")
-    @ParameterizedTest
-    public void testUnsignedMultiplicationSpeedOptimized(int uMultiplicand, IntStream uMultipliers) {
+    @Test
+    public void testUnsignedMultiplicationSpeedOptimized() {
         AsmParser asmParser = new AsmParser();
         Program program = asmParser.parse( "" +
                 "clr %B[result]" + "\n" +
                 "mov %A[result], %[muls]" + "\n" +
-//                "sbrc %A[result], 7" + "\n" +
-//                "neg %A[result]" + "\n" +
+
+                "lsr %A[result]" + "\n" +
+
+                "brcc .+2" + "\n" +
+                "add %B[result], %[mulu]" + "\n" +
+                "ror %B[result]" + "\n" +
+                "ror %A[result]" + "\n" +
+
+                "brcc .+2" + "\n" +
+                "add %B[result], %[mulu]" + "\n" +
+                "ror %B[result]" + "\n" +
+                "ror %A[result]" + "\n" +
+
+                "brcc .+2" + "\n" +
+                "add %B[result], %[mulu]" + "\n" +
+                "ror %B[result]" + "\n" +
+                "ror %A[result]" + "\n" +
+
+                "brcc .+2" + "\n" +
+                "add %B[result], %[mulu]" + "\n" +
+                "ror %B[result]" + "\n" +
+                "ror %A[result]" + "\n" +
+
+                "brcc .+2" + "\n" +
+                "add %B[result], %[mulu]" + "\n" +
+                "ror %B[result]" + "\n" +
+                "ror %A[result]" + "\n" +
+
+                "brcc .+2" + "\n" +
+                "add %B[result], %[mulu]" + "\n" +
+                "ror %B[result]" + "\n" +
+                "ror %A[result]" + "\n" +
+
+                "brcc .+2" + "\n" +
+                "add %B[result], %[mulu]" + "\n" +
+                "ror %B[result]" + "\n" +
+                "ror %A[result]" + "\n" +
+
+                "brcc .+2" + "\n" +
+                "add %B[result], %[mulu]" + "\n" +
+                "ror %B[result]" + "\n" +
+                "ror %A[result]" + "\n" +
+                ""
+        );
+
+        int steps = 0;
+        int count = 0;
+
+        for (int i = 0; i <= 255; i++) {
+            for (int j = 0; j <= 255; j++) {
+
+                count++;
+
+                State state = new State();
+                state.setRegister("%[mulu]", i);
+                state.setRegister("%[muls]", j);
+
+                steps += program.execute(state);
+
+                String description = "" + i + "x" + j;
+
+                assertEquals((i * j) & 0xFF, state.getRegister("%A[result]"), description);
+                assertEquals((i * j >> 8) & 0xFF, state.getRegister("%B[result]"), description);
+            }
+        }
+
+        System.out.println("Average steps = " + (1.0 * steps / count));
+    }
+
+    @Test
+    public void testSignedUnsignedMultiplicationSpeedOptimized() {
+        AsmParser asmParser = new AsmParser();
+        Program program = asmParser.parse( "" +
+                "clr %B[result]" + "\n" +
+                "mov %A[result], %[muls]" + "\n" +
+                "sbrc %A[result], 7" + "\n" +
+                "neg %A[result]" + "\n" +
 
                 "lsr %A[result]" + "\n" +
 
@@ -117,33 +183,35 @@ class MultiplicationTest {
                 "ror %A[result]" + "\n" +
 
                 // Invert result sign
-//                "tst %[muls]" + "\n" +
-//                "brlt .+6" + "\n" +
-//                "com %B[result]" + "\n" +
-//                "neg %A[result]" + "\n" +
-//                "sbci %B[result], 255" + "\n" +
+                "tst %[muls]" + "\n" +
+                "brlt .+6" + "\n" +
+                "com %B[result]" + "\n" +
+                "neg %A[result]" + "\n" +
+                "sbci %B[result], 255" + "\n" +
                 ""
         );
 
-        AtomicInteger steps = new AtomicInteger();
-        AtomicInteger count = new AtomicInteger();
+        int steps = 0;
+        int count = 0;
 
-        uMultipliers.forEach(uMultiplier -> {
-            count.incrementAndGet();
+        for (int i = 0; i <= 255; i++) {
+            for (int j = 127; j >= -127; j--) { // Value -128 is not supported
 
-            State state = new State();
-            state.setRegister("%[mulu]", uMultiplicand);
-            state.setRegister("%[muls]", uMultiplier);
+                count++;
 
-            steps.addAndGet(program.execute(state));
+                State state = new State();
+                state.setRegister("%[mulu]", i);
+                state.setRegister("%[muls]", j);
 
-            String description = "" + uMultiplicand + "x" + uMultiplier;
+                steps += program.execute(state);
 
-            assertEquals((uMultiplicand * uMultiplier) & 0xFF, state.getRegister("%A[result]"), description);
-            assertEquals((uMultiplicand * uMultiplier >> 8) & 0xFF, state.getRegister("%B[result]"), description);
+                String description = "" + i + "x" + j;
 
-        });
+                assertEquals((i * j) & 0xFF, state.getRegister("%A[result]"), description);
+                assertEquals((i * j >> 8) & 0xFF, state.getRegister("%B[result]"), description);
+            }
+        }
 
-        System.out.println("Average steps = " + (steps.doubleValue() / count.doubleValue()));
+        System.out.println("Average steps = " + (1.0 * steps / count));
     }
 }
